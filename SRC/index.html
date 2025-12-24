@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Tracker - 时间记录</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- 计时状态栏 -->
+    <div id="timer-bar" class="timer-bar hidden">
+        <div class="timer-info">
+            <span class="timer-icon">⏱</span>
+            <span id="timer-display" class="timer-display">00:00:00</span>
+            <span id="timer-description" class="timer-description"></span>
+            <div id="timer-tags" class="timer-tags"></div>
+        </div>
+        <button id="stop-timer-btn" class="btn btn-stop">停止计时</button>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="header-left">
+                <h1 class="logo">
+                    <span class="logo-icon">◷</span>
+                    Time Tracker
+                </h1>
+                <div class="header-shortcuts">
+                    <span class="shortcut-item">
+                        <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>T</kbd>
+                        <span class="shortcut-label">开始</span>
+                    </span>
+                    <span class="shortcut-item">
+                        <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>S</kbd>
+                        <span class="shortcut-label">停止</span>
+                    </span>
+                    <span class="shortcut-item">
+                        <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>M</kbd>
+                        <span class="shortcut-label">迷你</span>
+                    </span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button id="start-btn" class="btn btn-primary">
+                    <span>+ 开始记录</span>
+                </button>
+                <button id="export-btn" class="btn btn-secondary">导出</button>
+                <button id="settings-btn" class="btn btn-icon" title="设置">⚙</button>
+                <button id="mini-mode-btn" class="btn btn-icon" title="迷你模式">▫</button>
+            </div>
+        </header>
+
+        <!-- 标签页切换 -->
+        <nav class="tabs">
+            <button class="tab active" data-tab="daily">日报</button>
+            <button class="tab" data-tab="weekly">周报</button>
+            <button class="tab" data-tab="monthly">月报</button>
+        </nav>
+
+        <!-- 报表内容区域 -->
+        <main class="report-container">
+            <!-- 日报 -->
+            <section id="daily-report" class="report active">
+                <div class="report-header">
+                    <button id="prev-day" class="btn btn-nav">◀</button>
+                    <span id="current-date" class="date-display"></span>
+                    <button id="next-day" class="btn btn-nav">▶</button>
+                </div>
+                <div class="stats-summary">
+                    <div class="total-time">
+                        <span class="label">今日总时长</span>
+                        <span id="daily-total" class="value">0h 0m</span>
+                    </div>
+                </div>
+                
+                <!-- 标签筛选器 -->
+                <div class="tag-filter" id="daily-tag-filter">
+                    <div class="filter-section">
+                        <span class="filter-label">📊 计入统计</span>
+                        <div class="filter-tags included" id="daily-included-tags"></div>
+                    </div>
+                    <div class="filter-section">
+                        <span class="filter-label">🎮 不计入统计</span>
+                        <div class="filter-tags excluded" id="daily-excluded-tags"></div>
+                    </div>
+                </div>
+                
+                <div class="tag-stats" id="daily-tag-stats"></div>
+                <!-- 时间轴/时间线 标签页切换 -->
+                <div class="view-switcher">
+                    <div class="view-tabs">
+                        <button class="view-tab active" data-view="timeline-view">📊 时间轴</button>
+                        <button class="view-tab" data-view="list-view">📝 时间线</button>
+                    </div>
+                </div>
+
+                <div class="view-container">
+                    <!-- 24小时时间轴可视化 -->
+                    <div class="day-timeline-view view-panel active" id="timeline-view">
+                        <div class="zoom-hint">
+                            <span>🔍</span>
+                            <span><kbd>Alt</kbd> + 滚轮缩放</span>
+                        </div>
+                        <div class="timeline-columns">
+                            <!-- AM 栏 (0:00 - 12:00) -->
+                            <div class="timeline-column" id="timeline-am">
+                                <div class="column-header">🌅 AM</div>
+                                <div class="day-timeline-container">
+                                    <div class="hour-labels" id="hour-labels-am"></div>
+                                    <div class="time-blocks-container" id="time-blocks-container-am">
+                                        <div class="hour-grid" id="hour-grid-am"></div>
+                                        <div class="time-blocks" id="time-blocks-am"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- PM 栏 (12:00 - 24:00) -->
+                            <div class="timeline-column" id="timeline-pm">
+                                <div class="column-header">🌙 PM</div>
+                                <div class="day-timeline-container">
+                                    <div class="hour-labels" id="hour-labels-pm"></div>
+                                    <div class="time-blocks-container" id="time-blocks-container-pm">
+                                        <div class="hour-grid" id="hour-grid-pm"></div>
+                                        <div class="time-blocks" id="time-blocks-pm"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 时间线列表 -->
+                    <div class="timeline view-panel" id="list-view">
+                        <div id="timeline-list" class="timeline-list"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 周报 -->
+            <section id="weekly-report" class="report">
+                <div class="report-header">
+                    <button id="prev-week" class="btn btn-nav">◀</button>
+                    <span id="current-week" class="date-display"></span>
+                    <button id="next-week" class="btn btn-nav">▶</button>
+                </div>
+                <div class="stats-summary">
+                    <div class="total-time">
+                        <span class="label">本周总时长</span>
+                        <span id="weekly-total" class="value">0h 0m</span>
+                    </div>
+                    <div class="avg-time">
+                        <span class="label">日均</span>
+                        <span id="weekly-avg" class="value">0h 0m</span>
+                    </div>
+                </div>
+                
+                <!-- 标签筛选器 -->
+                <div class="tag-filter" id="weekly-tag-filter">
+                    <div class="filter-section">
+                        <span class="filter-label">📊 计入统计</span>
+                        <div class="filter-tags included" id="weekly-included-tags"></div>
+                    </div>
+                    <div class="filter-section">
+                        <span class="filter-label">🎮 不计入统计</span>
+                        <div class="filter-tags excluded" id="weekly-excluded-tags"></div>
+                    </div>
+                </div>
+                
+                <div class="week-chart" id="week-chart">
+                    <div class="chart-bars">
+                        <div class="bar-container" data-day="0">
+                            <div class="bar" style="height: 0%"></div>
+                            <span class="bar-label">一</span>
+                        </div>
+                        <div class="bar-container" data-day="1">
+                            <div class="bar" style="height: 0%"></div>
+                            <span class="bar-label">二</span>
+                        </div>
+                        <div class="bar-container" data-day="2">
+                            <div class="bar" style="height: 0%"></div>
+                            <span class="bar-label">三</span>
+                        </div>
+                        <div class="bar-container" data-day="3">
+                            <div class="bar" style="height: 0%"></div>
+                            <span class="bar-label">四</span>
+                        </div>
+                        <div class="bar-container" data-day="4">
+                            <div class="bar" style="height: 0%"></div>
+                            <span class="bar-label">五</span>
+                        </div>
+                        <div class="bar-container" data-day="5">
+                            <div class="bar" style="height: 0%"></div>
+                            <span class="bar-label">六</span>
+                        </div>
+                        <div class="bar-container" data-day="6">
+                            <div class="bar" style="height: 0%"></div>
+                            <span class="bar-label">日</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="tag-stats" id="weekly-tag-stats"></div>
+            </section>
+
+            <!-- 月报 -->
+            <section id="monthly-report" class="report">
+                <div class="report-header">
+                    <button id="prev-month" class="btn btn-nav">◀</button>
+                    <span id="current-month" class="date-display"></span>
+                    <button id="next-month" class="btn btn-nav">▶</button>
+                </div>
+                <div class="stats-summary">
+                    <div class="total-time">
+                        <span class="label">本月总时长</span>
+                        <span id="monthly-total" class="value">0h 0m</span>
+                    </div>
+                </div>
+                
+                <!-- 标签筛选器 -->
+                <div class="tag-filter" id="monthly-tag-filter">
+                    <div class="filter-section">
+                        <span class="filter-label">📊 计入统计</span>
+                        <div class="filter-tags included" id="monthly-included-tags"></div>
+                    </div>
+                    <div class="filter-section">
+                        <span class="filter-label">🎮 不计入统计</span>
+                        <div class="filter-tags excluded" id="monthly-excluded-tags"></div>
+                    </div>
+                </div>
+                
+                <div class="calendar-heatmap" id="calendar-heatmap"></div>
+                <div class="tag-stats" id="monthly-tag-stats"></div>
+            </section>
+        </main>
+
+        <!-- 快捷键提示 -->
+        <footer class="shortcuts-hint">
+            <span><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd> 开始记录</span>
+            <span><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> 停止计时</span>
+            <span><kbd>Esc</kbd> 关闭弹窗</span>
+        </footer>
+    </div>
+
+    <!-- 开始记录模态框 -->
+    <div id="record-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>开始时间记录</h2>
+                <button class="modal-close" id="close-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" id="input-section-desc">
+                    <label for="task-description">任务描述 <span class="input-focus-hint">[当前]</span></label>
+                    <input type="text" id="task-description" placeholder="这段时间在做什么..." autofocus>
+                </div>
+                <div class="form-group" id="input-section-tags">
+                    <label>选择标签 <span class="keyboard-hint">← → 选择 | Space 切换</span></label>
+                    <div id="tag-selector" class="tag-selector"></div>
+                    <button id="add-tag-btn" class="btn btn-text">+ 新标签 (N)</button>
+                </div>
+                <div class="keyboard-guide">
+                    <span><kbd>↑</kbd><kbd>↓</kbd> 切换区域</span>
+                    <span><kbd>←</kbd><kbd>→</kbd> 选择标签</span>
+                    <span><kbd>Space</kbd> 选中/取消</span>
+                    <span><kbd>N</kbd> 新建标签</span>
+                    <span><kbd>Enter</kbd> 开始计时</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-record" class="btn btn-secondary">取消 (Esc)</button>
+                <button id="start-record" class="btn btn-primary">开始计时 (Enter)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新建标签模态框 -->
+    <div id="tag-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>新建标签</h2>
+                <button class="modal-close" id="close-tag-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="tag-name">标签名称</label>
+                    <input type="text" id="tag-name" placeholder="例如: coding">
+                </div>
+                <div class="form-group">
+                    <label>选择颜色</label>
+                    <div id="color-picker" class="color-picker">
+                        <button class="color-option selected" data-color="#7dd3fc" style="background: #7dd3fc"></button>
+                        <button class="color-option" data-color="#fbbf24" style="background: #fbbf24"></button>
+                        <button class="color-option" data-color="#a78bfa" style="background: #a78bfa"></button>
+                        <button class="color-option" data-color="#34d399" style="background: #34d399"></button>
+                        <button class="color-option" data-color="#f87171" style="background: #f87171"></button>
+                        <button class="color-option" data-color="#fb923c" style="background: #fb923c"></button>
+                        <button class="color-option" data-color="#38bdf8" style="background: #38bdf8"></button>
+                        <button class="color-option" data-color="#c084fc" style="background: #c084fc"></button>
+                        <button class="color-option" data-color="#4ade80" style="background: #4ade80"></button>
+                        <button class="color-option" data-color="#facc15" style="background: #facc15"></button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="tag-excluded">
+                        <span>🎮 特殊标签（休闲/娱乐）</span>
+                    </label>
+                    <div class="hint">特殊标签的时间不计入总时间统计</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-tag" class="btn btn-secondary">取消</button>
+                <button id="save-tag" class="btn btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置模态框 -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>设置</h2>
+                <button class="modal-close" id="close-settings">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3>标签管理</h3>
+                    <div id="tags-list" class="tags-list"></div>
+                    <button id="add-tag-settings" class="btn btn-text">+ 添加新标签</button>
+                </div>
+                <div class="settings-section">
+                    <h3>数据导入</h3>
+                    <div id="import-area" class="import-area">
+                        <input type="file" id="import-file" accept=".json" hidden>
+                        <p>点击或拖拽 JSON 文件到此处</p>
+                    </div>
+                    <div id="import-preview" class="import-preview hidden"></div>
+                </div>
+                <div class="settings-section danger-zone">
+                    <h3>危险区域</h3>
+                    <button id="clear-all-data" class="btn btn-danger">清空所有数据</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导出模态框 -->
+    <div id="export-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>导出数据</h2>
+                <button class="modal-close" id="close-export">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>日期范围</label>
+                    <div class="date-range">
+                        <input type="date" id="export-start-date">
+                        <span>至</span>
+                        <input type="date" id="export-end-date">
+                    </div>
+                </div>
+                <div class="quick-options">
+                    <button class="btn btn-outline" data-range="today">今日</button>
+                    <button class="btn btn-outline" data-range="week">本周</button>
+                    <button class="btn btn-outline" data-range="month">本月</button>
+                    <button class="btn btn-outline" data-range="all">全部</button>
+                </div>
+                <div id="export-preview" class="export-preview"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-export" class="btn btn-secondary">取消</button>
+                <button id="confirm-export" class="btn btn-primary">导出 JSON</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑记录模态框 -->
+    <div id="edit-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>编辑时间记录</h2>
+                <button class="modal-close" id="close-edit-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit-description">任务描述</label>
+                    <input type="text" id="edit-description" placeholder="这段时间在做什么...">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-start-time">开始时间</label>
+                        <input type="datetime-local" id="edit-start-time">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-end-time">结束时间</label>
+                        <input type="datetime-local" id="edit-end-time">
+                    </div>
+                </div>
+                <div id="edit-conflict-warning" class="conflict-warning hidden">
+                    <span class="warning-icon">⚠️</span>
+                    <span id="conflict-message"></span>
+                    <button id="fix-conflict-btn" class="btn btn-small btn-warning">减去重叠</button>
+                </div>
+                <div class="form-group">
+                    <label>选择标签</label>
+                    <div id="edit-tag-selector" class="tag-selector"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="delete-record-btn" class="btn btn-danger">删除</button>
+                <div class="footer-right">
+                    <button id="cancel-edit" class="btn btn-secondary">取消</button>
+                    <button id="save-edit" class="btn btn-primary">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认对话框 -->
+    <div id="confirm-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="confirm-title">确认</h2>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message"></p>
+            </div>
+            <div class="modal-footer">
+                <button id="confirm-cancel" class="btn btn-secondary">取消</button>
+                <button id="confirm-ok" class="btn btn-danger">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示消息 -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="data.js"></script>
+    <script src="reminder.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
+

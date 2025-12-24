@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build output
+BUILD/
+dist/
+
+# Electron cache
+*.asar
+
+# Debug logs
+*.log
+debug.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+

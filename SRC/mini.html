@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Tracker Mini</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            background: transparent;
+            overflow: hidden;
+            -webkit-app-region: drag;
+        }
+
+        .mini-container {
+            background: rgba(15, 15, 20, 0.95);
+            border: 1px solid rgba(125, 211, 252, 0.3);
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+        }
+
+        .timer-display {
+            font-size: 24px;
+            font-weight: 700;
+            color: #7dd3fc;
+            letter-spacing: 1px;
+            min-width: 95px;
+        }
+
+        .task-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            max-width: 100px;
+            flex-shrink: 1;
+        }
+
+        .description {
+            font-size: 12px;
+            color: #e4e4e7;
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100px;
+        }
+
+        .description.empty {
+            color: #71717a;
+            font-style: italic;
+        }
+
+        .tags {
+            display: flex;
+            gap: 3px;
+        }
+
+        .mini-tag {
+            font-size: 9px;
+            padding: 1px 5px;
+            border-radius: 6px;
+            opacity: 0.9;
+            max-width: 45px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .mini-actions {
+            display: flex;
+            gap: 6px;
+            margin-left: auto;
+            -webkit-app-region: no-drag;
+            flex-shrink: 0;
+        }
+
+        .btn-mini {
+            width: 26px;
+            height: 26px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-stop {
+            background: #f87171;
+            color: white;
+        }
+
+        .btn-stop:hover {
+            background: #fca5a5;
+        }
+
+        .btn-continue {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-continue:hover {
+            background: #4ade80;
+        }
+
+        /* 空闲状态 */
+        .idle-state {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #a1a1aa;
+            font-size: 12px;
+            flex: 1;
+        }
+
+        .idle-state .last-record {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            max-width: 140px;
+        }
+
+        .idle-state .last-desc {
+            font-size: 11px;
+            color: #e4e4e7;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .idle-state .last-time {
+            font-size: 9px;
+            color: #71717a;
+        }
+
+        .idle-state .hint {
+            font-size: 10px;
+            color: #52525b;
+        }
+
+        kbd {
+            background: #27272a;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 9px;
+            border: 1px solid #3f3f46;
+            color: #7dd3fc;
+        }
+    </style>
+</head>
+<body>
+    <div class="mini-container">
+        <div id="timer-content" style="display: flex; align-items: center; gap: 12px; flex: 1;">
+            <!-- 空闲状态 -->
+            <div id="idle-state" class="idle-state">
+                <span style="font-size: 16px; opacity: 0.6;">◷</span>
+                <div id="last-record-info" class="last-record" style="display: none;">
+                    <span id="last-desc" class="last-desc"></span>
+                    <span id="last-time" class="last-time"></span>
+                </div>
+                <span id="idle-hint" class="hint"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd></span>
+            </div>
+            
+            <!-- 计时状态 -->
+            <div id="timing-state" style="display: none;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span id="timer-display" class="timer-display">00:00:00</span>
+                    <div class="task-info">
+                        <span id="description" class="description"></span>
+                        <div id="tags" class="tags"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mini-actions">
+            <button id="stop-btn" class="btn-mini btn-stop" style="display: none;" title="停止 (Ctrl+Shift+S)">■</button>
+            <button id="continue-btn" class="btn-mini btn-continue" style="display: none;" title="继续上一个任务">▶</button>
+        </div>
+    </div>
+
+    <script>
+        // DOM 元素
+        const idleState = document.getElementById('idle-state');
+        const timingState = document.getElementById('timing-state');
+        const timerDisplay = document.getElementById('timer-display');
+        const description = document.getElementById('description');
+        const tagsContainer = document.getElementById('tags');
+        const stopBtn = document.getElementById('stop-btn');
+        const continueBtn = document.getElementById('continue-btn');
+        const lastRecordInfo = document.getElementById('last-record-info');
+        const lastDesc = document.getElementById('last-desc');
+        const lastTime = document.getElementById('last-time');
+        const idleHint = document.getElementById('idle-hint');
+
+        let lastRecordData = null;
+
+        // 继续上一个任务
+        continueBtn.addEventListener('click', () => {
+            if (window.electronAPI && lastRecordData) {
+                window.electronAPI.continueLastRecord(lastRecordData);
+            }
+        });
+
+        // 停止计时
+        stopBtn.addEventListener('click', () => {
+            if (window.electronAPI) {
+                window.electronAPI.stopTimer();
+            }
+        });
+
+        // 监听计时器同步
+        if (window.electronAPI) {
+            window.electronAPI.onTimerSync((data) => {
+                updateDisplay(data);
+            });
+
+            window.electronAPI.onStopTimer(() => {
+                // 停止计时事件
+            });
+        }
+
+        // 截断文字
+        function truncateText(text, maxBytes) {
+            if (!text) return '';
+            let result = '';
+            let bytes = 0;
+            for (let char of text) {
+                const charBytes = char.charCodeAt(0) > 127 ? 2 : 1;
+                if (bytes + charBytes > maxBytes) {
+                    return result + '…';
+                }
+                result += char;
+                bytes += charBytes;
+            }
+            return result;
+        }
+
+        // 更新显示
+        function updateDisplay(data) {
+            if (data.isRunning) {
+                idleState.style.display = 'none';
+                timingState.style.display = 'block';
+                stopBtn.style.display = 'flex';
+                continueBtn.style.display = 'none';
+                timerDisplay.textContent = data.display;
+                
+                // 显示任务描述（限制15字节）
+                const truncatedDesc = truncateText(data.description, 15);
+                if (truncatedDesc) {
+                    description.textContent = truncatedDesc;
+                    description.classList.remove('empty');
+                } else {
+                    description.textContent = '';
+                    description.classList.add('empty');
+                }
+
+                // 显示标签
+                if (data.tagColors && data.tagColors.length > 0) {
+                    tagsContainer.innerHTML = data.tagColors.slice(0, 2).map(tag => 
+                        `<span class="mini-tag" style="background: ${tag.color}; color: ${getBrightness(tag.color) > 128 ? '#1a1a24' : '#fff'}">${tag.name}</span>`
+                    ).join('');
+                } else {
+                    tagsContainer.innerHTML = '';
+                }
+            } else {
+                idleState.style.display = 'flex';
+                timingState.style.display = 'none';
+                stopBtn.style.display = 'none';
+
+                // 显示上一条记录
+                if (data.lastRecord) {
+                    lastRecordData = data.lastRecord;
+                    lastRecordInfo.style.display = 'flex';
+                    lastDesc.textContent = truncateText(data.lastRecord.description || '(无描述)', 18);
+                    lastTime.textContent = data.lastRecord.endTime || '';
+                    continueBtn.style.display = 'flex';
+                    idleHint.style.display = 'none';
+                } else {
+                    lastRecordInfo.style.display = 'none';
+                    continueBtn.style.display = 'none';
+                    idleHint.style.display = 'block';
+                }
+            }
+        }
+
+        // 计算亮度
+        function getBrightness(hexColor) {
+            const r = parseInt(hexColor.slice(1, 3), 16);
+            const g = parseInt(hexColor.slice(3, 5), 16);
+            const b = parseInt(hexColor.slice(5, 7), 16);
+            return (r * 299 + g * 587 + b * 114) / 1000;
+        }
+    </script>
+</body>
+</html>

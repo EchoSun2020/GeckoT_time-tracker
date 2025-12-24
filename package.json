@@ -1,0 +1,40 @@
+{
+  "name": "time-tracker",
+  "version": "1.0.0",
+  "description": "完全离线的时间记录桌面应用",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win portable --config.win.signAndEditExecutable=false",
+    "generate-icons": "node generate-icons.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "optionalDependencies": {
+    "sharp": "^0.33.0"
+  },
+  "build": {
+    "appId": "com.timetracker.app",
+    "productName": "Time Tracker",
+    "directories": {
+      "output": "BUILD"
+    },
+    "win": {
+      "target": "portable",
+      "icon": "ASSETS/icon.ico"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "ASSETS/icon.png"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "ASSETS/icon.icns"
+    }
+  }
+}
+

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a24"/>
+      <stop offset="100%" style="stop-color:#0f0f14"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7dd3fc"/>
+      <stop offset="100%" style="stop-color:#38bdf8"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- 背景圆 -->
+  <circle cx="128" cy="128" r="120" fill="url(#bg)" stroke="url(#accent)" stroke-width="8"/>
+  
+  <!-- 时钟外圈 -->
+  <circle cx="128" cy="128" r="90" fill="none" stroke="#27272a" stroke-width="12"/>
+  <circle cx="128" cy="128" r="90" fill="none" stroke="url(#accent)" stroke-width="6" 
+          stroke-dasharray="141.37 424.12" stroke-linecap="round"/>
+  
+  <!-- 时钟刻度 -->
+  <g stroke="#71717a" stroke-width="3">
+    <line x1="128" y1="48" x2="128" y2="58"/>
+    <line x1="128" y1="198" x2="128" y2="208"/>
+    <line x1="48" y1="128" x2="58" y2="128"/>
+    <line x1="198" y1="128" x2="208" y2="128"/>
+  </g>
+  
+  <!-- 时针 -->
+  <line x1="128" y1="128" x2="128" y2="85" stroke="#e4e4e7" stroke-width="8" stroke-linecap="round"/>
+  
+  <!-- 分针 -->
+  <line x1="128" y1="128" x2="168" y2="98" stroke="url(#accent)" stroke-width="6" stroke-linecap="round"/>
+  
+  <!-- 中心点 -->
+  <circle cx="128" cy="128" r="10" fill="url(#accent)"/>
+  <circle cx="128" cy="128" r="5" fill="#0f0f14"/>
+</svg>
+
