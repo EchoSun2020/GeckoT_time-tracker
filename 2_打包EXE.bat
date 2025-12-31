@@ -29,6 +29,30 @@ echo [*] 正在打包成 Windows 便携版...
 echo     (首次打包可能需要 3-5 分钟)
 echo.
 
+echo [0/3] 关闭正在运行的程序（避免文件占用）...
+:: 如果你正在运行打包后的 BUILD\win-unpacked\Time Tracker.exe，会锁住 d3dcompiler_47.dll
+taskkill /f /im "Time Tracker.exe" /t >nul 2>nul
+taskkill /f /im "electron.exe" /t >nul 2>nul
+
+echo [1/3] 清理旧的构建产物...
+if exist "BUILD\win-unpacked" (
+    rmdir /s /q "BUILD\win-unpacked" >nul 2>nul
+)
+:: 有时删除会被占用，等待一下再重试
+if exist "BUILD\win-unpacked" (
+    timeout /t 2 /nobreak >nul
+    rmdir /s /q "BUILD\win-unpacked" >nul 2>nul
+)
+if exist "BUILD\win-unpacked" (
+    echo [错误] 无法删除 BUILD\win-unpacked（可能被占用）
+    echo - 请先关闭所有 Time Tracker 窗口
+    echo - 关闭所有打开的 BUILD\win-unpacked 文件夹窗口
+    echo - 再重新运行本脚本
+    pause
+    exit /b 1
+)
+
+echo [2/3] 开始打包...
 call npm run build
 
 if %errorlevel% neq 0 (
@@ -53,4 +77,13 @@ echo.
 explorer "%~dp0BUILD"
 
 pause
+
+
+
+
+
+
+
+
+
 

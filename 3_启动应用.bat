@@ -22,3 +22,12 @@ if not exist "node_modules" (
 :: 启动应用
 start "" npm start
 
+
+
+
+
+
+
+
+
+
