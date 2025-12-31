@@ -506,6 +506,15 @@ const App = (function() {
                 updateDailyReport();
                 updateWeeklyReport();
                 updateMonthlyReport();
+
+                // 如果正在计时，标签类型切换可能影响提醒类型（普通/特殊）——这里立即重启提醒系统以同步
+                if (state.isTimerRunning) {
+                    try {
+                        ReminderSystem.start(state.selectedTags, DataManager.getTags);
+                    } catch (err) {
+                        console.error('[app.js] 标签类型切换后 ReminderSystem.start 错误:', err);
+                    }
+                }
                 showToast(nextIsExcluded ? '已切换为休息/娱乐（不计入统计）' : '已切换为工作/学习（计入统计）', 'success');
             });
         });
